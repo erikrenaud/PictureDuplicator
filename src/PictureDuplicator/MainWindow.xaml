@@ -1,0 +1,23 @@
+﻿<Window x:Class="PictureDuplicator.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="PictureDuplicator" Height="360" Width="525">
+    <Grid>
+        <TextBlock Height="23" HorizontalAlignment="Left" Margin="111,12,0,0" Name="textBlock3" VerticalAlignment="Top" Width="154"
+                   Text="{Binding Path=TotalSearchedFiles}"/>
+        <TextBlock Height="23" HorizontalAlignment="Left" Margin="111,46,0,0" Name="textBlock4" VerticalAlignment="Top" Width="154"
+                   Text="{Binding Path=TotalSynchedFiles}"/>
+
+        <TextBlock Height="23" HorizontalAlignment="Left" Margin="12,119,0,0" Name="textBlock1" VerticalAlignment="Top" Width="479"
+                   Text="{Binding Path=Message}"/>
+        <ProgressBar Height="24" HorizontalAlignment="Left" Margin="12,89,0,0" Name="progressBar1" VerticalAlignment="Top" Width="479" 
+                     Value="{Binding Path=FilesProcessed}" Maximum="{Binding Path=TotalFilesFound}" />
+        <TextBlock Height="23" HorizontalAlignment="Left" Margin="322,60,0,0" Name="textBlock2" VerticalAlignment="Top" Width="169" TextAlignment="Right"
+                   Text="{Binding Path=FilesRemaining}"/>
+        <Label Content="Searched Files:" Height="28" HorizontalAlignment="Left" Margin="12,12,0,0" Name="label1" VerticalAlignment="Top" Width="93" />
+        <Label Content="Synched Files:" Height="28" HorizontalAlignment="Left" Margin="12,46,0,0" Name="label2" VerticalAlignment="Top" Width="93" />
+        <ScrollViewer>
+        <TextBlock Height="161" TextWrapping="Wrap" Text="{Binding Path=Errors}" HorizontalAlignment="Left" Margin="12,148,0,0" Name="textBlock5" VerticalAlignment="Top" Width="479" />
+        </ScrollViewer>
+    </Grid>
+</Window>

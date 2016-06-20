@@ -1,0 +1,29 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PictureDuplicator", "PictureDuplicator\PictureDuplicator.csproj", "{0549695A-7A87-46C5-BD24-4785B468D546}"
+EndProject
+Global
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 2
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = http://modelon:8080/tfs/defaultcollection
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = PictureDuplicator\\PictureDuplicator.csproj
+		SccProjectName1 = PictureDuplicator
+		SccLocalPath1 = PictureDuplicator
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0549695A-7A87-46C5-BD24-4785B468D546}.Debug|x86.ActiveCfg = Debug|x86
+		{0549695A-7A87-46C5-BD24-4785B468D546}.Debug|x86.Build.0 = Debug|x86
+		{0549695A-7A87-46C5-BD24-4785B468D546}.Release|x86.ActiveCfg = Release|x86
+		{0549695A-7A87-46C5-BD24-4785B468D546}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
