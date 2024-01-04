@@ -1,7 +1,7 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PictureDuplicator", "PictureDuplicator\PictureDuplicator.csproj", "{0549695A-7A87-46C5-BD24-4785B468D546}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PictureDuplicator", "PictureDuplicator\PictureDuplicator.csproj", "{0549695A-7A87-46C5-BD24-4785B468D546}"
 EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution

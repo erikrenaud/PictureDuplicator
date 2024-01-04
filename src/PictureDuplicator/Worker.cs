@@ -36,7 +36,13 @@ namespace PictureDuplicator
             {
                 get
                 {
-                    return new FileInfo(FlattenPath(Settings.Default.RatedPath, FilePath));
+                    var newPath = FlattenPath(Settings.Default.RatedPath, FilePath);
+                    if (!newPath.ToLower().EndsWith(".jpg"))
+                    {
+                        newPath = newPath.Replace(new FileInfo(newPath).Extension, ".jpg");
+                    }
+                    var fi = new FileInfo(newPath);
+                    return fi;
                 }
             }
 
@@ -47,6 +53,22 @@ namespace PictureDuplicator
                 //s = s.Replace('\\', '_');
 
                 return basePath + s;
+            }
+
+            public bool IsValidExtension
+            {
+                get
+                {
+                    return (this.FileInfo.Extension.ToLower() == ".jpg" || this.FileInfo.Extension.ToLower() == ".jpeg" || this.FileInfo.Extension.ToLower() == ".png" || this.FileInfo.Extension.ToLower() == ".heic");
+                }
+            }
+
+            public bool FileTypeContainsMetadata
+            {
+                get
+                {
+                    return (this.FileInfo.Extension.ToLower() == ".jpg" || this.FileInfo.Extension.ToLower() == ".jpeg");
+                }
             }
         }
 
@@ -84,9 +106,9 @@ namespace PictureDuplicator
                 if (!fileExplorerThread.IsAlive && !fileProcessorThread.IsAlive)
                     break;
             }
-                
-            if (fileExplorerThread.IsAlive) fileExplorerThread.Abort();
-            if (fileProcessorThread.IsAlive) fileProcessorThread.Abort();
+
+            if (fileExplorerThread.IsAlive) fileExplorerThread.Join();
+            if (fileProcessorThread.IsAlive) fileProcessorThread.Join();
         }
 
         private void ExploreFiles()
@@ -132,87 +154,100 @@ namespace PictureDuplicator
         {
             WorkFile workFile = new WorkFile() { FilePath = file };
 
-            if (workFile.FileInfo.Extension.ToLower() != ".jpg")
+            if (!workFile.IsValidExtension)
                 return null;
 
             if (workFile.FileInfo.DirectoryName.ToLower().StartsWith(Settings.Default.RatedPath.ToLower()))
                 return null;
 
-            using (var fs = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.Read))
+            if (workFile.FileTypeContainsMetadata)
             {
-                BitmapDecoder decoder = null;
-                BitmapMetadata metadata = null;
-                int msRating = 0;
-                int acdseeRating = 0;
-                try
+                using (var fs = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
-                    decoder = BitmapDecoder.Create(fs, BitmapCreateOptions.IgnoreColorProfile | BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.None);
-                    if ((decoder.Frames[0] == null) || (decoder.Frames[0].Metadata == null))
-                    {
-                        return null;
-                    }
-                    metadata = decoder.Frames[0].Metadata as BitmapMetadata;
-                    msRating = metadata.Rating;
+                    BitmapDecoder decoder = null;
+                    BitmapMetadata metadata = null;
+                    int msRating = 0;
+                    int acdseeRating = 0;
                     try
                     {
-                        acdseeRating = int.Parse(metadata.GetQuery(@"/xmp/http\:\/\/ns.acdsee.com\/iptc\/1.0\/:rating").ToString());
-                    }
-                    catch { }
-                }
-                catch (Exception e)
-                {
-                    Data.Errors += file + " Couldn't read extract metadata. " + e.Message + System.Environment.NewLine;
-                    return null;
-                }
-
-                string synchedFile = null;
-                try
-                {
-                    if (msRating != acdseeRating)
-                    {
-                        JpegBitmapEncoder output = new JpegBitmapEncoder();
-                        var metaDataClone = metadata.Clone() as BitmapMetadata;
-                        int highestRating = msRating > acdseeRating ? msRating : acdseeRating;
-                        metaDataClone.Rating = highestRating;
-                        metaDataClone.SetQuery(@"/xmp/http\:\/\/ns.acdsee.com\/iptc\/1.0\/:rating", highestRating.ToString());
-                        output.Frames.Add(BitmapFrame.Create(decoder.Frames[0], decoder.Frames[0].Thumbnail, metaDataClone, decoder.Frames[0].ColorContexts));
-                        synchedFile = file + "XXX";
-
-                        using (Stream outputFile = File.Open(synchedFile, FileMode.Create, FileAccess.ReadWrite))
+                        decoder = BitmapDecoder.Create(fs, BitmapCreateOptions.IgnoreColorProfile | BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.None);
+                        if ((decoder.Frames[0] == null) || (decoder.Frames[0].Metadata == null))
                         {
-                            output.Save(outputFile);
-                            outputFile.Close();
+                            return null;
                         }
-                        Data.TotalSynchedFiles++;
+                        metadata = decoder.Frames[0].Metadata as BitmapMetadata;
+                        msRating = metadata.Rating;
+                        try
+                        {
+                            acdseeRating = int.Parse(metadata.GetQuery(@"/xmp/http\:\/\/ns.acdsee.com\/iptc\/1.0\/:rating").ToString());
+                        }
+                        catch { }
                     }
-                }
-                catch (Exception e)
-                {
-                    Data.Errors += file + " Couldn't sync file after sync. " + e.Message + System.Environment.NewLine;
-                }
-
-                fs.Close();
-                try
-                {
-                    if (synchedFile != null)
+                    catch (Exception e)
                     {
-                        File.Delete(file);
-                        File.Move(synchedFile, file);
+                        Data.Errors += file + " Couldn't read extract metadata. " + e.Message + System.Environment.NewLine;
+                        return null;
                     }
-                }
-                catch (Exception e)
-                {
-                    Data.Errors += file + " Couldn't delete-move file after sync. " + e.Message + System.Environment.NewLine;
-                }
 
-                workFile.Rating = msRating > acdseeRating ? msRating : acdseeRating;
-                
-                if (workFile.FileInfoRated.Exists && workFile.Rating == 0)
-                    workFile.FileInfoRated.Delete();
+                    string synchedFile = null;
+                    try
+                    {
+                        if (msRating != acdseeRating)
+                        {
+                            JpegBitmapEncoder output = new JpegBitmapEncoder();
+                            var metaDataClone = metadata.Clone() as BitmapMetadata;
+                            int highestRating = msRating > acdseeRating ? msRating : acdseeRating;
+                            metaDataClone.Rating = highestRating;
+                            metaDataClone.SetQuery(@"/xmp/http\:\/\/ns.acdsee.com\/iptc\/1.0\/:rating", highestRating.ToString());
+                            output.Frames.Add(BitmapFrame.Create(decoder.Frames[0], decoder.Frames[0].Thumbnail, metaDataClone, decoder.Frames[0].ColorContexts));
+                            synchedFile = file + "XXX";
 
-                if (workFile.Rating > 0)
-                    return workFile;
+                            using (Stream outputFile = File.Open(synchedFile, FileMode.Create, FileAccess.ReadWrite))
+                            {
+                                output.Save(outputFile);
+                                outputFile.Close();
+                            }
+                            Data.TotalSynchedFiles++;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Data.Errors += file + " Couldn't sync file after sync. " + e.Message + System.Environment.NewLine;
+                    }
+
+                    fs.Close();
+                    try
+                    {
+                        if (synchedFile != null)
+                        {
+                            File.Delete(file);
+                            File.Move(synchedFile, file);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Data.Errors += file + " Couldn't delete-move file after sync. " + e.Message + System.Environment.NewLine;
+                    }
+
+                    workFile.Rating = msRating > acdseeRating ? msRating : acdseeRating;
+                }
             }
+
+            //set rating from filename
+            var filename = Path.GetFileNameWithoutExtension(workFile.FileInfo.Name.ToLower());
+            {
+                if (filename.EndsWith("r1")) workFile.Rating = 1;
+                else if (filename.EndsWith("r2")) workFile.Rating = 2;
+                else if (filename.EndsWith("r3")) workFile.Rating = 3;
+                else if (filename.EndsWith("r4")) workFile.Rating = 4;
+                else if (filename.EndsWith("r5")) workFile.Rating = 5;
+            }
+
+            if (workFile.FileInfoRated.Exists && workFile.Rating == 0)
+                workFile.FileInfoRated.Delete();
+
+            if (workFile.Rating > 0)
+                return workFile;
             return null;
         }
 
@@ -247,6 +282,7 @@ namespace PictureDuplicator
                     }
 
                     lock (this) count = FilesToProcess.Count;
+                    if (count == 0) Thread.Sleep(50);
                 }
 
                 Data.Message = "Finished";
