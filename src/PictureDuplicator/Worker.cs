@@ -296,6 +296,8 @@ namespace PictureDuplicator
 
         private void ManageRating(WorkFile file)
         {
+            try
+            {
             BitmapDecoder photoDecoder;
             using (var fs = new FileStream(file.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
@@ -317,6 +319,11 @@ namespace PictureDuplicator
                 }
 
                 fs.Close();
+            }
+            }
+            catch (Exception e)
+            {
+                Data.Errors += file.FilePath + "ProcessFileError : " + e.Message + System.Environment.NewLine + e.StackTrace + System.Environment.NewLine;
             }
         }
 
